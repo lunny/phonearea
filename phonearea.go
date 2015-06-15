@@ -21,6 +21,7 @@ var (
 type Area struct {
 	Id          int64
 	PhonePrefix string
+	Country     string
 	Province    string
 	City        string
 	Provider    string
@@ -91,6 +92,23 @@ var (
 	KeyAreaCode   = "ac:%d"
 )
 
+var (
+	providers = map[string]bool{
+		"电信": true,
+		"移动": true,
+		"联通": true,
+	}
+)
+
+func getProvider(mode string) string {
+	for k, _ := range providers {
+		if strings.Contains(mode, k) {
+			return k
+		}
+	}
+	return "未知"
+}
+
 //1,"1330000","广西 南宁市","电信CDMA卡","0771","530000"
 func saveLine(line string, db *nodb.DB) error {
 	line = strings.Replace(line, `"`, "", -1)
@@ -121,7 +139,7 @@ func saveLine(line string, db *nodb.DB) error {
 	// 城市
 	db.Set([]byte(fmt.Sprintf(KeyCity, i)), []byte(pc[1]))
 	// 供应商
-	//db.Set([]byte(fmt.Sprintf(KeyProvider, i)), []byte(pd[0]))
+	db.Set([]byte(fmt.Sprintf(KeyProvider, i)), []byte(getProvider(fields[2])))
 	// 制式
 	db.Set([]byte(fmt.Sprintf(KeyMode, i)), []byte(fields[2]))
 	// 邮编
@@ -212,10 +230,10 @@ func Query(phoneNum string) (*Area, error) {
 	}
 
 	// 供应商
-	/*area.Provider, err = GetString(db, fmt.Sprintf(KeyProvider, i))
+	area.Provider, err = GetString(db, fmt.Sprintf(KeyProvider, i))
 	if err != nil {
 		return nil, err
-	}*/
+	}
 
 	// 制式
 	area.Model, err = GetString(db, fmt.Sprintf(KeyMode, i))
@@ -234,6 +252,9 @@ func Query(phoneNum string) (*Area, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// 暂时都为中国
+	area.Country = "中国"
 
 	return &area, nil
 }
