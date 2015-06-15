@@ -1,4 +1,4 @@
-package phoneareago
+package phonearea
 
 import (
 	"bufio"
